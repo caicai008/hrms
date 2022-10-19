@@ -24,7 +24,7 @@ module.exports = {
    * In most cases please use '/' !!!
    * Detail: https://cli.vuejs.org/config/#publicpath
    */
-  publicPath: '/',
+  publicPath: './',
   outputDir: 'dist',
   assetsDir: 'static',
   lintOnSave: process.env.NODE_ENV === 'development',
@@ -35,8 +35,17 @@ module.exports = {
     overlay: {
       warnings: false,
       errors: true
-    }
+    },
     // before: require('./mock/mock-server.js')
+    // 代理配置
+    proxy: {
+      // 这里的 api 表示如果我们的请求地址以 /api 开头的时候，就出触发代理机制
+      '/api': {
+        target: 'http://ihrm.itheima.net', // 需要代理的地址
+        changeOrigin: true // 是否跨域，需要设置此值为 true 才可以让本地服务代理我们发出请求
+      }
+      // 这里没有pathRewrite, 因为后端接口就是ihrm.itheima.net/api这种格式,所以不需要重写
+    }
   },
   configureWebpack: {
     // provide the app's title in webpack's name field, so that
