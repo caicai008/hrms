@@ -47,3 +47,9 @@
 .el-range-separator {
   box-sizing: content-box;
 }
+
+// 树形控件节点_内容样式(每行)
+.el-tree-node__content {
+  height: 30px !important;
+  font-size: 14px !important;
+}

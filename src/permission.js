@@ -4,6 +4,7 @@ import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 import router from './router'
 import store from './store'
+import getPageTitle from './utils/get-page-title'
 
 const whiteList = ['/login', '/404'] // no redirect whitelist
 
@@ -35,6 +36,8 @@ router.beforeEach(async(to, from, next) => {
   }
 })
 
-router.afterEach(() => {
+router.afterEach((to, from) => {
+  // 获取当前标题
+  document.title = getPageTitle(to.meta.title)
   NProgress.done()
 })

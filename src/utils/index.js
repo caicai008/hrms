@@ -115,3 +115,24 @@ export function param2Obj(url) {
   })
   return obj
 }
+
+/**
+ * 把扁平结构的数据, 转成树形控件
+ * @param {*} list 遍历结构数组
+ * @param {*} rootValue 返回数组，第一层对象的pid值
+ * @returns
+ */
+export function transTree(list, rootValue) {
+  const treeData = [] // 装下属对象的
+  list.forEach(item => {
+    if (item.pid === rootValue) { // 当前对象pid符合, 继续递归调用查找它的下属
+      const children = transTree(list, item.id) // 返回item对象下属数组
+      if (children.length) {
+        item.children = children // 为item添加children属性保存下属数组
+      }
+      treeData.push(item) // 把当前对象保存到数组里, 继续遍历
+    }
+  })
+  // 遍历结束, rootValue的id对应下属们收集成功, 返回给上一次递归调用children, 加到父级对象的children属性下
+  return treeData
+}

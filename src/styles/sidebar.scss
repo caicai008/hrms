@@ -5,6 +5,7 @@
     transition: margin-left .28s;
     margin-left: $sideBarWidth;
     position: relative;
+    background-color: #f0f2f5;
   }
 
   .sidebar-container {
@@ -70,6 +71,17 @@
       width: 100% !important;
 
       a {
+        .is-active {
+          background-color: $menuText !important;
+
+          span{
+            color: $menuActiveText !important;
+          }
+
+          .svg-icon{
+            color: $menuActiveText !important;
+          }
+        }
         li {
           .svg-icon {
             color: #fff;
@@ -112,11 +124,11 @@
     & .nest-menu .el-submenu>.el-submenu__title,
     & .el-submenu .el-menu-item {
       min-width: $sideBarWidth !important;
-      background-color: $subMenuBg !important;
+      // background-color: $subMenuBg !important;
 
-      &:hover {
-        background-color: $subMenuHover !important;
-      }
+      // &:hover {
+      //   background-color: $subMenuHover !important;
+      // }
     }
   }
 

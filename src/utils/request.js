@@ -40,7 +40,7 @@ service.interceptors.response.use(
   },
   error => {
     Message.error(error.response.data.message) // http状态码4xx
-    if (error.response.data.code === 1002) {
+    if (error.response.data.code === 10002) {
       // 清空用户信息
       store.commit('user/RESET_STATE')
       store.commit('user/REMOVE_TOKEN')
