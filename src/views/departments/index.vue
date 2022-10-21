@@ -25,7 +25,7 @@
                       </span>
                       <!-- 下拉项 -->
                       <el-dropdown-menu slot="dropdown">
-                        <el-dropdown-item>添加子部门</el-dropdown-item>
+                        <el-dropdown-item @click.native="add()">添加子部门</el-dropdown-item>
                       </el-dropdown-menu>
                     </el-dropdown>
                   </el-col>
@@ -61,7 +61,7 @@
                           <el-dropdown-menu slot="dropdown">
                             <el-dropdown-item @click.native="add(data)">添加子部门</el-dropdown-item>
                             <el-dropdown-item @click.native="edit(data)">编辑部门</el-dropdown-item>
-                            <el-dropdown-item @click.native="del(data)">删除部门</el-dropdown-item>
+                            <el-dropdown-item v-if="data && !data.children" @click.native="del(data)">删除部门</el-dropdown-item>
                           </el-dropdown-menu>
                         </el-dropdown>
                       </el-col>
@@ -74,14 +74,26 @@
         </el-tabs>
       </el-card>
     </div>
+    <!-- 新增弹窗组件 -->
+    <depart-dialog
+      ref="departDialog"
+      :dialog-visible.sync="showDepartDialog"
+      :employees-list="employeesList"
+      :origin-list="originList"
+      :is-edit="isEdit"
+      :parent-id="clickDepartId"
+      @addDepartEV="addDepartmentsFn"
+    />
   </div>
 </template>
 
 <script>
-import { departmentsListAPI } from '@/api/departments'
+import { departmentsListAPI, getEmployeeSimpleAPI, addDepartmentsAPI, getDepartDetailAPI, updateDepartmentsAPI, deleteDepartmentsAPI } from '@/api'
 import { transTree } from '@/utils/index'
+import departDialog from './components/departDialog.vue'
 export default {
   name: 'Departments',
+  components: { departDialog },
   data() {
     return {
       activeName: 'first',
@@ -91,11 +103,17 @@ export default {
       defaultProps: {
         children: 'children',
         label: 'name'
-      }
+      },
+      showDepartDialog: false, // 展示操作对话框
+      employeesList: [], // 员工列表
+      clickDepartId: '', // 部门ID
+      isEdit: false, // 是否编辑状态
+      originList: [] // 用于弹窗内-校验部门code和name是否重复数据数组
     }
   },
   created() {
     this.getDepartMentsListFn()
+    this.getEmployeesListFn()
   },
   methods: {
     handleClick() {
@@ -103,22 +121,78 @@ export default {
     },
     // 正文部分-右侧的添加子部门
     add(data) {
-
+      this.isEdit = false
+      if (data) { // 添加二级部门
+        this.clickDepartId = data.id // 保存当前部门id
+      } else { // 添加一级部门
+        this.clickDepartId = ''
+      }
+      this.showDepartDialog = true
     },
     // 编辑子部分
-    edit(data) {
-
+    async edit(data) {
+      this.isEdit = true
+      this.clickDepartId = data.id
+      this.showDepartDialog = true
+      const res = await getDepartDetailAPI(data.id)
+      // console.log(res)
+      this.$refs.departDialog.form = res.data
     },
     // 删除部分
     del(data) {
-
+      this.$confirm('此操作将永久删除该部门, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async() => {
+        const res = await deleteDepartmentsAPI(data.id)
+        if (!res.success) return this.$message.error(res.message)
+        // 刷新列表
+        this.getDepartMentsListFn()
+        this.$message({
+          type: 'success',
+          message: '删除成功!'
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        })
+      })
     },
     // 获取部门列表
     async getDepartMentsListFn() {
       const res = await departmentsListAPI()
       // console.log(res)
+      // 做校验时需要的数据相对简单，并不需要把部门列表数据全部传递给子组件，这里做一些映射处理
+      this.originList = res.data.depts.map(item => ({
+        id: item.id,
+        code: item.code,
+        name: item.name,
+        pid: item.pid // 下面使用
+      }))
+      // console.log(this.originList)
       // 因为后台返回的字段是id和pid而且根是空字符串, 如果不是需要自己改变transTree里判断条件等
       this.treeData = transTree(res.data.depts, '')
+    },
+    // 获取负责人列表
+    async getEmployeesListFn() {
+      const res = await getEmployeeSimpleAPI()
+      // console.log(res)
+      this.employeesList = res.data
+    },
+    // 编辑-添加部门的方法
+    async addDepartmentsFn(dataObj) {
+      if (this.isEdit) { // 编辑状态
+        dataObj.id = this.clickDepartId
+        await updateDepartmentsAPI(dataObj)
+      } else { // 新增状态
+        dataObj.pid = this.clickDepartId
+        await addDepartmentsAPI(dataObj)
+        // console.log(res)
+      }
+      // 更新组织列表
+      this.getDepartMentsListFn()
     }
   }
 }
