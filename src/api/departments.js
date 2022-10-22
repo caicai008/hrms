@@ -51,6 +51,7 @@ export function updateDepartmentsAPI(data) {
   })
 }
 
+// 删除部门
 export function deleteDepartmentsAPI(id) {
   return request({
     url: `/company/department/${id}`,
