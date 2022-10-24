@@ -50,3 +50,27 @@ export function importEmployeeAPI(data) {
     data
   })
 }
+
+/**
+ * @description: 获取员工详细信息
+ * @param {*} id 用户id
+ * @return {*}
+ */
+export function getUserDetailByIdAPI(id) {
+  return request({
+    url: `/sys/user/${id}`
+  })
+}
+
+/**
+ * @description: 保存员工信息
+ * @param {*} data
+ * @return {*}
+ */
+export function saveUserDetailByIdAPI(data) {
+  return request({
+    url: `/sys/user/${data.id}`,
+    method: 'put',
+    data
+  })
+}
