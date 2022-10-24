@@ -10,8 +10,8 @@
 
         <!-- 右侧插槽 -->
         <template #slot-right>
-          <el-button type="danger" size="small">导入excel</el-button>
-          <el-button type="success" size="small">导出excel</el-button>
+          <el-button type="danger" size="small" @click="uploadExcelBtnFn">导入excel</el-button>
+          <el-button type="success" size="small" @click="downloadExcel">导出excel</el-button>
           <el-button type="primary" size="small" @click="addRole">新增员工</el-button>
         </template>
       </PageTools>
@@ -38,7 +38,7 @@
           </el-table-column>
           <el-table-column label="操作" width="280">
             <template v-slot="{ row }">
-              <el-button type="text" size="small">查看</el-button>
+              <el-button type="text" size="small" @click="$router.push('/employees/detail?id=' + row.id)">查看</el-button>
               <el-button type="text" size="small">分配角色</el-button>
               <el-button type="text" size="small" @click="delEmp(row.id)">删除</el-button>
             </template>
@@ -191,6 +191,85 @@ export default {
       }
       // 重新获取数据
       this.getEmployeeList()
+    },
+
+    // 导入Excel
+    uploadExcelBtnFn() {
+      this.$router.push('/excel')
+    },
+
+    // 导出Excel数据处理
+    transData(rows) {
+      // const map = {
+      //   'id': '编号',
+      //   'password': '密码',
+      //   'mobile': '手机号',
+      //   'username': '姓名',
+      //   'timeOfEntry': '入职日期',
+      //   'formOfEmployment': '聘用形式',
+      //   'correctionTime': '转正日期',
+      //   'workNumber': '工号',
+      //   'departmentName': '部门',
+      //   'staffPhoto': '头像地址'
+      // }
+      // const headerKeys = Object.keys(rows[0])
+      // // console.log(headerKeys)
+      // const header = headerKeys.map(item => {
+      //   return map[item]
+      // })
+      // // console.log(header)
+      // const data = rows.map(obj => {
+      //   return Object.values(obj)
+      // })
+      // return { header, data }
+
+      // 考虑顺序 (页面上列保持一致顺序)
+      // 准备一个列表头中文数组 (8个)
+      const headerArr = ['序号', '姓名', '头像', '手机号', '工号', '聘用形式', '部门', '入职时间']
+      const myObj = {
+        // 序号可以等遍历的时候直接用索引值, 而不是来自于英文对象里
+        '姓名': 'username',
+        '头像': 'staffPhoto',
+        '手机号': 'mobile',
+        '工号': 'workNumber',
+        '聘用形式': 'formOfEmployment',
+        '部门': 'departmentName',
+        '入职时间': 'timeOfEntry'
+      }
+      const resultArr = rows.map((item, index) => {
+        const valueArr = [] // 值小数组
+        headerArr.forEach(zhKey => {
+          if (zhKey === '序号') {
+            valueArr.push(index + 1)
+          } else {
+            const enKey = myObj[zhKey]
+            valueArr.push(item[enKey])
+          }
+        })
+        return valueArr
+      })
+      return { header: headerArr, data: resultArr }
+    },
+
+    // 导出Excel
+    async downloadExcel() {
+      const res = await getEmployeeListAPI()
+      const res2 = await getEmployeeListAPI({
+        page: 1,
+        size: res.data.total // 导出所有
+      })
+      // console.log(res)
+      const excelObj = this.transData(res2.data.rows)
+      import('@/vendor/Export2Excel').then(excel => {
+        // excel表示导入的模块对象
+        excel.export_json_to_excel({
+          header: excelObj.header, // 表头 必填
+          data: excelObj.data, // 具体数据 必填
+          filename: '员工列表', // 文件名称
+          autoWidth: true, // 宽度是否自适应
+          bookType: 'xlsx' // 生成的文件类型
+        })
+      })
     }
   }
 }

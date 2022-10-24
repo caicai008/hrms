@@ -55,6 +55,12 @@ export const asyncRouters = [
         name: 'Employees',
         component: () => import('@/views/employees'),
         meta: { title: '员工', icon: 'people' }
+      },
+      {
+        path: 'detail',
+        name: 'employeesDetail',
+        component: () => import('@/views/employees/detail.vue'),
+        hidden: true
       }
     ]
   },
@@ -134,6 +140,18 @@ export const constantRoutes = [
         name: 'Dashboard',
         component: () => import('@/views/dashboard/index'),
         meta: { title: '首页', icon: 'dashboard' }
+      }
+    ]
+  },
+  // excel
+  {
+    path: '/excel',
+    component: Layout,
+    hidden: true, // 不显示到左侧菜单
+    children: [
+      {
+        path: '',
+        component: () => import('@/views/excel')
       }
     ]
   },

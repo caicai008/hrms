@@ -37,3 +37,16 @@ export function delEmployeeAPI(id) {
     url: `/sys/user/${id}`
   })
 }
+
+/**
+ * @description: 导入excel
+ * @param {*} data
+ * @return {*}
+ */
+export function importEmployeeAPI(data) {
+  return request({
+    url: '/sys/user/batch',
+    method: 'post',
+    data
+  })
+}
