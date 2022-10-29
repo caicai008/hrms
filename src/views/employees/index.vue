@@ -43,7 +43,7 @@
           <el-table-column label="操作" width="280">
             <template v-slot="{ row }">
               <el-button type="text" size="small" @click="$router.push('/employees/detail?id=' + row.id)">查看</el-button>
-              <el-button type="text" size="small">分配角色</el-button>
+              <el-button type="text" size="small" @click="setEmp(row.id)">分配角色</el-button>
               <el-button type="text" size="small" @click="delEmp(row.id)">删除</el-button>
             </template>
           </el-table-column>
@@ -74,16 +74,28 @@
         @addEmpEV="addEmpEVFn"
       />
     </el-dialog>
+
+    <!-- 分配角色对话框 -->
+    <el-dialog title="分配角色" :visible="showRoleDialog" @close="showRoleDialog = false">
+      <assign-role-dialog
+        ref="assignRole"
+        :user-id="userId"
+        :role-list="roleList"
+        @close="showRoleDialog = false"
+        @confirm="addRoleFn"
+      />
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { getEmployeeListAPI, departmentsListAPI, addEmployeeAPI, delEmployeeAPI } from '@/api'
+import { getEmployeeListAPI, departmentsListAPI, addEmployeeAPI, delEmployeeAPI, getRolesAPI, getUserDetailByIdAPI, assignRolesAPI } from '@/api'
 import { transTree } from '@/utils'
 import empDialog from './components/empDialog.vue'
 import dayjs from 'dayjs'
+import AssignRoleDialog from './components/assignRoleDialog.vue'
 export default {
-  components: { empDialog },
+  components: { empDialog, AssignRoleDialog },
   data() {
     return {
       query: {
@@ -93,7 +105,11 @@ export default {
       employeesList: [], // 员工列表
       departmentsList: [], // 部门列表
       total: 0, // 数据总条数
-      dialogVisible: false
+      dialogVisible: false, // 新增员工
+      showRoleDialog: false, // 分配角色
+      userId: '', // 用户ID
+      roleList: [], // 角色列表
+      clickId: '' // 点击id
     }
   },
   created() {
@@ -274,6 +290,40 @@ export default {
           bookType: 'xlsx' // 生成的文件类型
         })
       })
+    },
+
+    // 分配角色按钮
+    async setEmp(id) {
+      this.userId = id
+      this.clickId = id
+      this.showRoleDialog = true
+      const res = await getRolesAPI()
+      // console.log(res)
+      this.roleList = res.data.rows
+
+      const infoRes = await getUserDetailByIdAPI(id)
+      // console.log(infoRes)
+      if (!infoRes.success) return this.$message.error(infoRes.message)
+
+      this.$nextTick(() => {
+        this.$refs.assignRole.roleArr = infoRes.data.roleIds
+      })
+    },
+
+    // 角色分配确认
+    async addRoleFn(obj) {
+      const res = await assignRolesAPI({
+        id: this.userId,
+        roleIds: obj
+      })
+      if (!res.success) return this.$message.error(res.message)
+
+      // 员工分配成功，给用户提示
+      this.$message.success(res.message)
+      // 关闭弹框
+      this.showRoleDialog = false
+      // 重新获取当前当前列表数据
+      this.getEmployeeList()
     }
   }
 }

@@ -74,3 +74,16 @@ export function saveUserDetailByIdAPI(data) {
     data
   })
 }
+
+/**
+ * @description: 为员工分配角色
+ * @param {*} data { id:当前用户id, roleIds:选中的角色id组成的数组 }
+ * @return {*}
+ */
+export function assignRolesAPI(data) {
+  return request({
+    url: '/sys/user/assignRoles',
+    data,
+    method: 'put'
+  })
+}
