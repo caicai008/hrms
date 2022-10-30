@@ -19,7 +19,7 @@
               <el-table-column prop="description" label="描述" />
               <el-table-column label="操作">
                 <template slot-scope="scope">
-                  <el-button type="success" size="small" @click="handleClick(scope.row)">分配权限</el-button>
+                  <el-button type="success" size="small" @click="assignRow(scope.row.id)">分配权限</el-button>
                   <el-button type="primary" size="small" @click="editRole(scope.row)">编辑</el-button>
                   <el-button type="danger" size="small" @click="deleteRole(scope.row)">删除</el-button>
                 </template>
@@ -85,14 +85,32 @@
           <el-button type="primary" @click="roleSubmit">确 定</el-button>
         </div>
       </el-dialog>
+
+      <!-- 分配权限弹出层 -->
+      <el-dialog
+        title="分配权限"
+        :visible.sync="showAssign"
+        width="50%"
+      >
+        <assign-permission
+          :show-assign.sync="showAssign"
+          :role-id="roleId"
+          :permission-list="permissionList"
+          :role-ids-list="roleIdsList"
+          @confirm="confirmFn"
+        />
+      </el-dialog>
     </div>
   </div>
 </template>
 
 <script>
-import { getRolesAPI, getCompanyInfoAPI, addRoleAPI, getRoleIdAPI, updateRoleAPI, deleteRoleAPI } from '@/api'
+import { getRolesAPI, getCompanyInfoAPI, addRoleAPI, getRoleIdAPI, updateRoleAPI, deleteRoleAPI, getPermissionListAPI, assignPermAPI } from '@/api'
 import { mapGetters } from 'vuex'
+import assignPermission from './assignPermission.vue'
+import { transTree } from '@/utils'
 export default {
+  components: { assignPermission },
   data() {
     return {
       activeName: 'first',
@@ -100,10 +118,14 @@ export default {
         page: 1, // 当前页面
         pagesize: 10 // 页面显示的条数
       },
+      permissionList: [], // 权限列表
+      roleIdsList: [], // 某个角色的权限点数组
       rolesList: [], // 角色列表
       total: 0, // 角色数据总条数
       formData: {}, // 公司信息
       dialogFormVisible: false, // 展示弹窗
+      showAssign: false, // 分配权限弹出层
+      roleId: '', // 分配权限id
       // 添加角色
       roleForm: {
         name: '',
@@ -130,8 +152,19 @@ export default {
     this.getCompanyInfo()
   },
   methods: {
-    handleClick(tab, event) {
-      console.log(tab, event)
+    // 分配权限
+    async assignRow(id) {
+      // 解决数据闪现问题
+      this.roleIdsList = []
+      this.showAssign = true
+      this.roleId = id
+      const res = await getPermissionListAPI()
+      this.permissionList = transTree(res.data, '0')
+
+      // 获取当前角色的权限，回显
+      const res1 = await getRoleIdAPI(id)
+      // console.log(res1)
+      this.roleIdsList = res1.data.permIds
     },
 
     // 每页显示的条数发生改变时触发
@@ -243,6 +276,15 @@ export default {
           message: '已取消删除！'
         })
       })
+    },
+
+    // 确认分配权限按钮
+    async confirmFn(obj) {
+      const res = await assignPermAPI(obj)
+      // console.log(res)
+      if (res.success) this.$message.success(res.message)
+      this.dialogVisible = false
+      this.getRolesInfo()
     }
   }
 }
