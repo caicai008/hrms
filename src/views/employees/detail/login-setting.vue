@@ -24,7 +24,7 @@
 </template>
 
 <script>
-import { getUserDetailByIdAPI, saveUserDetailByIdAPI } from '@/api'
+import { getUserDetailByIdAPI, getUserProfileAPI, saveUserDetailByIdAPI } from '@/api'
 export default {
   name: 'LoginSetting',
   data() {
@@ -46,6 +46,8 @@ export default {
     // 获取用户信息
     async getUserDetail() {
       const res = await getUserDetailByIdAPI(this.$route.query.id).catch(err => err)
+      const res1 = await getUserProfileAPI()
+      console.log(res1)
       if (!res.success) return this.$message.error(res.message)
       this.userInfo = res.data
     },

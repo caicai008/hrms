@@ -2,7 +2,7 @@
 import NProgress from 'nprogress'
 // 导入进度条样式
 import 'nprogress/nprogress.css'
-import router from './router'
+import router, { asyncRouters } from './router'
 import store from './store'
 import getPageTitle from './utils/get-page-title'
 
@@ -19,6 +19,13 @@ router.beforeEach(async(to, from, next) => {
       NProgress.done()
     } else {
       // 如果token存在，但是访问的是其他页面，直接放行
+      if (!store.getters.userId) {
+        await store.dispatch('user/getUserInfo')
+        router.addRoutes(asyncRouters)
+
+        // 将动态路由传递给 mutation 方法，进行合并
+        store.commit('permission/setRoutes', asyncRouters)
+      }
       next()
       if (!store.getters.name) {
         store.dispatch('user/getUserInfo')
