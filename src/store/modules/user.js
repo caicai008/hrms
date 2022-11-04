@@ -1,5 +1,6 @@
 import { getToken, setToken, removeToken } from '@/utils/auth'
 import { getUserProfileAPI, getUserAvatarAPI } from '@/api/user'
+import { resetRouter } from '@/router'
 
 const getDefaultState = () => {
   return {
@@ -39,11 +40,17 @@ const actions = {
     // console.log(userObj)
     const newObj = { ...userObj, ...avatarObj } // 合并用户信息
     commit('SET_USER', newObj)
+
+    // 返回该用户的权限菜单
+    return userObj.roles.menus
   },
   // 退出登录
   async logoutActions({ commit }) {
     commit('REMOVE_TOKEN')
     commit('RESET_STATE')
+
+    // 重置路由规则对象的数组
+    resetRouter()
   }
 }
 

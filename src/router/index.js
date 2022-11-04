@@ -154,9 +154,9 @@ export const constantRoutes = [
         component: () => import('@/views/excel')
       }
     ]
-  },
+  }
 
-  { path: '*', redirect: '/404', hidden: true }
+  // { path: '*', redirect: '/404', hidden: true }
 ]
 
 const createRouter = () => new Router({
@@ -167,9 +167,11 @@ const createRouter = () => new Router({
 
 const router = createRouter()
 
+// 重置路由 -- 解决动态路由退出登录路由重复问题
 export function resetRouter() {
   const newRouter = createRouter()
   router.matcher = newRouter.matcher
 }
 
 export default router
+

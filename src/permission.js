@@ -20,11 +20,28 @@ router.beforeEach(async(to, from, next) => {
     } else {
       // 如果token存在，但是访问的是其他页面，直接放行
       if (!store.getters.userId) {
-        await store.dispatch('user/getUserInfo')
-        router.addRoutes(asyncRouters)
+        const menus = await store.dispatch('user/getUserInfo')
+        // 根据用户实际的权限 menus 从asyncRouteArr里, 过滤出用户能访问的页面的路由对象
+        const filterRoutes = asyncRouters.filter(route => {
+          const routeName = route.children[0].name.toLowerCase()
+          return menus.includes(routeName)
+        })
+
+        router.addRoutes(filterRoutes)
+
+        // 404页必须设置在最后！--- 解决刷新白屏问题
+        filterRoutes.push(
+          { path: '*', redirect: '/404', hidden: true }
+        )
 
         // 将动态路由传递给 mutation 方法，进行合并
-        store.commit('permission/setRoutes', asyncRouters)
+        store.commit('permission/setRoutes', filterRoutes)
+
+        // 解决刷新出现白屏的bug
+        next({
+          path: to.path, // 保证路由添加完了再重新进入
+          replace: true // 重进一次，不保留重复历史
+        })
       }
       next()
       if (!store.getters.name) {
